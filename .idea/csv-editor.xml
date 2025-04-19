@@ -3,6 +3,13 @@
   <component name="CsvFileAttributes">
     <option name="attributeMap">
       <map>
+        <entry key="/PHPini-library/src/main/resources/phpini_directives.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value=";" />
+            </Attribute>
+          </value>
+        </entry>
         <entry key="/PHPini-library/src/test/resources/phpini_directives.csv">
           <value>
             <Attribute>
@@ -10,10 +17,10 @@
             </Attribute>
           </value>
         </entry>
-        <entry key="/src/main/resources/phpini_directives.csv">
+        <entry key="/a.csv">
           <value>
             <Attribute>
-              <option name="separator" value=";" />
+              <option name="separator" value="," />
             </Attribute>
           </value>
         </entry>

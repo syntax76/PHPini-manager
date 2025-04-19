@@ -1,5 +1,7 @@
 package de.hermannbsd.phpini.library.interfaces;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.List;
 
 /**
@@ -58,11 +60,46 @@ public interface IPhpIni {
     String getFileContent();
 
     /**
-     * Get the directives of the PHP INI file.
+     * Get the directives of the PHP INI file as a dictionary.
      *
-     * @return a list of IPhpIniDirective objects representing the directives
+     * @return a dictionary where the key is the section name and the value is a list of IPhpIniDirective objects
      */
-    List<IPhpIniDirective> getDirectives();
+    List<IPhpIniSection> getIni();
+
+    /**
+     * Gets whether the PHP INI file contains a section with the given name.
+     * @param sectionName the given name
+     * @return true if the section exists, false otherwise
+     */
+    boolean containsSection(String sectionName);
+
+    /**
+     * Gets whether the PHP INI file contains a directive with the given name.
+     * @param directiveName the given name
+     * @return true if the directive exists, false otherwise
+     */
+    boolean containsDirective(String directiveName);
+
+    /**
+     * Adds a given section to the PHP INI file.
+     * @param section the section to add
+     * @return true if the section was added successfully, false otherwise
+     */
+    boolean addSection(IPhpIniSection section);
+
+    /**
+     * Removes a given section from the PHP INI file.
+     * @param section the section to remove
+     * @return true if the section was removed successfully, false otherwise
+     */
+    boolean removeSection(IPhpIniSection section);
+
+    /**
+     * Removes a section from the PHP INI file.
+     * @param sectionName the name of the section to remove
+     * @return true if the section was removed successfully, false otherwise
+     */
+    boolean removeSection(String sectionName);
 
     /**
      * Adds a given directive to the PHP INI file.
@@ -70,23 +107,6 @@ public interface IPhpIni {
      * @return true if the directive was added successfully, false otherwise
      */
     boolean addDirective(IPhpIniDirective directive);
-
-    /**
-     * Adds a directive to the PHP INI file.
-     * @param name the name of the directive
-     * @param value the value of the directive
-     * @return true if the directive was added successfully, false otherwise
-     */
-    boolean addDirective(String name, String value);
-
-    /**
-     * Adds a directive to the PHP INI file.
-     * @param name the name of the directive
-     * @param value the value of the directive
-     * @param section the section of the directive
-     * @return true if the directive was added successfully, false otherwise
-     */
-    boolean addDirective(String name, String value, String section);
 
     /**
      * Updates a directive in the PHP INI file.
@@ -101,7 +121,7 @@ public interface IPhpIni {
      * @param directive the directive to update
      * @return true if the directive was removed successfully, false otherwise
      */
-    boolean removeDirective(IPhpIniDirective directive);
+    boolean removeDirective(@NotNull IPhpIniDirective directive);
 
     /**
      * Remove a directive from the PHP INI file.

@@ -1,4 +1,1 @@
-Name;Default;Changable;Changelog;Description
-allow_url_fopen;"1";INI_SYSTEM;;"This option enables the URL-aware fopen wrappers that enable accessing URL object like files. Default wrappers are provided for the access of remote files using the ftp or http protocol, some extensions like zlib may register additional wrappers."
-allow_url_include;"0";INI_SYSTEM;"Deprecated as of PHP 7.4.0.";"This option allows the use of URL-aware fopen wrappers with the following functions: include, include_once, require, require_once."
-arg_separator.input;"&";INI_PERDIR;;"List of separator(s) used by PHP to parse input URLs into variables."
+../../main/resources/phpini_directives.csv

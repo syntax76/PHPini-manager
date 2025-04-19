@@ -1,0 +1,30 @@
+@startuml
+!include IPhpIniDirective.puml
+!include IPhpIniSection.puml
+
+interface de.hermannbsd.phpini.library.interfaces.IPhpIni {
+~ String getFilePath()
+~ void setFilePath(String)
+~ String getFileName()
+~ void setFileName(String)
+~ String getFileNameWithoutExtension()
+~ void setFileNameWithoutExtension(String)
+~ String getFileExtension()
+~ String getFileContent()
+~ List<IPhpIniSection> getIni()
+~ boolean containsSection(String)
+~ boolean containsDirective(String)
+~ boolean addSection(IPhpIniSection)
+~ boolean removeSection(IPhpIniSection)
+~ boolean removeSection(String)
+~ boolean addDirective(IPhpIniDirective)
+~ boolean updateDirective(String,String)
+~ boolean removeDirective(IPhpIniDirective)
+~ boolean removeDirective(String)
+~ IPhpIniDirective getDirective(String)
+~ boolean save()
+}
+
+IPhpIni::getDirective -> IPhpIniDirective
+IPhpIni::getIni -o IPhpIniSection
+@enduml

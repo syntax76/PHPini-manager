@@ -1,6 +1,6 @@
 package de.hermannbsd.phpini.library.interfaces;
 
-import de.hermannbsd.phpini.library.DirectiveChangeable;
+import de.hermannbsd.phpini.library.enums.DirectiveChangeable;
 
 /**
  * Interface for a PHP INI directive.
@@ -28,6 +28,35 @@ public interface IPhpIniDirective {
     String getValue();
 
     /**
+     * Tries to set the real value of the directive.
+     *
+     * @param value the real value of the directive
+     * @return true if the value was set successfully, false otherwise
+     */
+    boolean trySetRealValue(Object value);
+
+    /**
+     * Get the real value of the directive.
+     *
+     * @return the real value of the directive as an Object
+     */
+    Object getRealValue();
+
+    /**
+     * Set the type of the directive.
+     *
+     * @param type the type of the directive
+     */
+    void setType(String type);
+
+    /**
+     * Get the type of the directive.
+     *
+     * @return the type of the directive as a String
+     */
+    String getType();
+
+    /**
      * Get the default value of the directive.
      *
      * @return the default value of the directive as a String
@@ -39,7 +68,7 @@ public interface IPhpIniDirective {
      *
      * @return The changeable type of the directive.
      */
-    DirectiveChangeable getChangeable();
+    DirectiveChangeable getDirectiveChangeable();
 
     /**
      * Get the description of the directive.
@@ -61,4 +90,11 @@ public interface IPhpIniDirective {
      * @return the section of the directive as a String
      */
     String getSection();
+
+    /**
+     * Get the content of the directive.
+     *
+     * @return the content of the directive as a String
+     */
+    String getContent();
 }

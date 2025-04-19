@@ -2,6 +2,8 @@ package de.hermannbsd.phpini.library;
 
 import de.hermannbsd.phpini.library.interfaces.IPhpIni;
 import de.hermannbsd.phpini.library.interfaces.IPhpIniDirective;
+import de.hermannbsd.phpini.library.interfaces.IPhpIniSection;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,8 +12,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.FileAttribute;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
  * Class representing a PHP INI file.
@@ -41,6 +42,12 @@ public class PhpIni implements IPhpIni {
      * Logger for the PhpIni class.
      */
     private static final Logger logger = LoggerFactory.getLogger(PhpIni.class);
+    static final String DIRECTIVE_NOT_FOUND_IN_PHP_INI_FILE = "Directive {} not found in PHP INI file";
+    static final String DIRECTIVE_FOUND_IN_PHP_INI_FILE = "Directive {} found in PHP INI file";
+    static final String SECTION_NOT_FOUND_IN_PHP_INI_FILE = "Section {} not found in PHP INI file";
+    static final String SECTION_FOUND_IN_PHP_INI_FILE = "Section {} found in PHP INI file";
+    static final String SECTION_REMOVED_FROM_PHP_INI_FILE = "Section {} removed from PHP INI file";
+    static final String SECTION_IS_NULL_OR_EMPTY = "Section is null or empty";
 
     /**
      * The path of the PHP INI file.
@@ -68,12 +75,20 @@ public class PhpIni implements IPhpIni {
      */
     private String fileContent;
 
+    /**
+     * Is the PHP INI file created?
+     */
     private final boolean isCreated;
+
+    /**
+     * The current section of the PHP INI file.
+     */
+    private String currentSectionName;
 
     /**
      * The list of directives in the PHP INI file.
      */
-    private List<IPhpIniDirective> directives;
+    private List<IPhpIniSection> ini;
 
     /**
      * Constructor for the PhpIni class.
@@ -84,7 +99,7 @@ public class PhpIni implements IPhpIni {
     public PhpIni(String filePath) throws IOException {
         this.filePath = filePath;
 
-        if (filePath != null && Paths.get(filePath).toFile().exists()) {
+        if (filePath != null && tryGetFilePath(filePath)) {
             innerPath = Paths.get(filePath);
             isCreated = false;
             init();
@@ -100,6 +115,17 @@ public class PhpIni implements IPhpIni {
                 throw new IOException(message, e);
             }
         }
+    }
+
+    private boolean tryGetFilePath(String filePath) {
+        boolean result = false;
+        try {
+            result = Files.exists(Paths.get(filePath));
+        } catch (Exception e) {
+            logger.error("Error checking file path: {}", filePath, e);
+        }
+
+        return result;
     }
 
     /**
@@ -133,18 +159,33 @@ public class PhpIni implements IPhpIni {
         this.fileNameWithoutExtension = fileName.substring(0, fileName.lastIndexOf('.'));
         this.fileExtension = fileName.substring(fileName.lastIndexOf('.') + 1);
 
-        this.directives = new ArrayList<>();
+        this.ini = new ArrayList<>();
     }
 
+    /**
+     * Initialize the directives in the PHP INI file.
+     * This method reads the file content and populates the ini HashMap with directives.
+     */
     private void initDirectives() {
         if (!isCreated && fileContent != null && !fileContent.isEmpty()) {
             try {
                 List<String> lines = Files.readAllLines(innerPath);
                 for (String line : lines) {
-                    IPhpIniDirective directive = new PhpIniDirective(line);
+                    IPhpIniDirective directive = new PhpIniDirective(line, currentSectionName);
 
-                    if (directive.getName() != null && !directive.getName().isEmpty()) {
-                        directives.add(directive);
+                    if (directive.getName() != null && !directive.getName().isEmpty()
+                            && !containsDirective(directive.getName())) {
+                        addDirective(directive);
+                        logger.debug("Directive {} added to section {}", directive.getName(), directive.getSection());
+                    } else if (directive.getSection() != null && !directive.getSection().isEmpty()
+                            && !directive.getSection().equalsIgnoreCase(currentSectionName)) {
+                        currentSectionName = directive.getSection();
+                        ini.add(new PhpIniSection(currentSectionName));
+                        logger.debug("Section {} added to PHP INI file", currentSectionName);
+                    } else if (directive.getSection().equalsIgnoreCase(currentSectionName)) {
+                        logger.debug("Directive {} already exists in section {}", directive.getName(), directive.getSection());
+                    } else {
+                        logger.warn("Invalid directive: {}", line);
                     }
                 }
             } catch (IOException e) {
@@ -194,13 +235,138 @@ public class PhpIni implements IPhpIni {
     }
 
     /**
-     * Get the directives of the PHP INI file.
+     * Get the directives of the PHP INI file as a dictionary.
      *
-     * @return a list of IPhpIniDirective objects representing the directives
+     * @return a dictionary where the key is the section name and the value is a list of IPhpIniDirective objects
      */
     @Override
-    public List<IPhpIniDirective> getDirectives() {
-        return List.of();
+    public List<IPhpIniSection> getIni() {
+        return ini;
+    }
+
+    /**
+     * Gets whether the PHP INI file contains a section with the given name.
+     *
+     * @param sectionName the given name
+     * @return true if the section exists, false otherwise
+     */
+    @Override
+    public boolean containsSection(String sectionName) {
+        boolean result = false;
+
+        for (IPhpIniSection section : ini) {
+            if (section.getName().equalsIgnoreCase(sectionName)) {
+                result = true;
+                break;
+            }
+        }
+
+        if (!result) {
+            logger.info(SECTION_NOT_FOUND_IN_PHP_INI_FILE, sectionName);
+        } else {
+            logger.info(SECTION_FOUND_IN_PHP_INI_FILE, sectionName);
+        }
+
+        return result;
+    }
+
+    /**
+     * Gets whether the PHP INI file contains a directive with the given name.
+     *
+     * @param directiveName the given name
+     * @return true if the directive exists, false otherwise
+     */
+    @Override
+    public boolean containsDirective(String directiveName) {
+        boolean result = false;
+
+        for (IPhpIniSection section : ini) {
+            if (section.getDirectiveByName(directiveName) != null) {
+                result = true;
+                break;
+            }
+        }
+
+        if (!result) {
+            logger.info(DIRECTIVE_NOT_FOUND_IN_PHP_INI_FILE, directiveName);
+        } else {
+            logger.info(DIRECTIVE_FOUND_IN_PHP_INI_FILE, directiveName);
+        }
+
+        return result;
+    }
+
+    /**
+     * Adds a given section to the PHP INI file.
+     * @param section the section to add
+     * @return true if the section was added successfully, false otherwise
+     */
+    @Override
+    public boolean addSection(IPhpIniSection section) {
+        boolean result = false;
+
+        if (section != null && !section.getName().isEmpty()) {
+            if (!containsSection(section.getName())) {
+                ini.add(section);
+                result = true;
+                logger.info("Section {} added to PHP INI file", section.getName());
+            } else {
+                logger.warn("Section {} already exists in PHP INI file", section.getName());
+            }
+        } else {
+            logger.error(SECTION_IS_NULL_OR_EMPTY);
+        }
+
+        return result;
+    }
+
+    /**
+     * Removes a given section from the PHP INI file.
+     *
+     * @param section the section to remove
+     * @return true if the section was removed successfully, false otherwise
+     */
+    @Override
+    public boolean removeSection(IPhpIniSection section) {
+        boolean result = false;
+
+        if (section != null && containsSection(section.getName())) {
+            ini.remove(section);
+            result = true;
+            logger.info(SECTION_REMOVED_FROM_PHP_INI_FILE, section.getName());
+        } else if (section != null) {
+            logger.warn(SECTION_NOT_FOUND_IN_PHP_INI_FILE, section.getName());
+        } else {
+            logger.error(SECTION_IS_NULL_OR_EMPTY);
+        }
+
+        return result;
+    }
+
+    /**
+     * Removes a section from the PHP INI file.
+     *
+     * @param sectionName the name of the section to remove
+     * @return true if the section was removed successfully, false otherwise
+     */
+    @Override
+    public boolean removeSection(String sectionName) {
+        boolean result = false;
+
+        if (containsSection(sectionName)) {
+            for (IPhpIniSection section : ini) {
+                if (section.getName().equalsIgnoreCase(sectionName)) {
+                    ini.remove(section);
+                    result = true;
+                    logger.info(SECTION_REMOVED_FROM_PHP_INI_FILE, sectionName);
+                    break;
+                }
+            }
+        } else {
+            logger.warn(SECTION_NOT_FOUND_IN_PHP_INI_FILE, sectionName);
+        }
+
+        return result;
     }
 
     /**
@@ -211,32 +377,26 @@ public class PhpIni implements IPhpIni {
      */
     @Override
     public boolean addDirective(IPhpIniDirective directive) {
-        return false;
-    }
+        boolean result = false;
 
-    /**
-     * Adds a directive to the PHP INI file.
-     *
-     * @param name  the name of the directive
-     * @param value the value of the directive
-     * @return true if the directive was added successfully, false otherwise
-     */
-    @Override
-    public boolean addDirective(String name, String value) {
-        return false;
-    }
+        if (directive != null && !directive.getName().isEmpty()) {
+            if (!containsDirective(directive.getName())) {
+                for (IPhpIniSection section : ini) {
+                    if (section.getName().equalsIgnoreCase(directive.getSection())) {
+                        section.getDirectives().add(directive);
+                        result = true;
+                        logger.info("Directive {} added to section {} in PHP INI file", directive.getName(), directive.getSection());
+                        break;
+                    }
+                }
+            } else {
+                logger.warn("Directive {} already exists in PHP INI file", directive.getName());
+            }
+        } else {
+            logger.error("Directive is null or empty");
+        }
 
-    /**
-     * Adds a directive to the PHP INI file.
-     *
-     * @param name    the name of the directive
-     * @param value   the value of the directive
-     * @param section the section of the directive
-     * @return true if the directive was added successfully, false otherwise
-     */
-    @Override
-    public boolean addDirective(String name, String value, String section) {
-        return false;
+        return result;
     }
 
     /**
@@ -248,7 +408,23 @@ public class PhpIni implements IPhpIni {
      */
     @Override
     public boolean updateDirective(String name, String value) {
-        return false;
+        boolean result = false;
+
+        if (name != null && !name.isEmpty()) {
+            for (IPhpIniSection section : ini) {
+                IPhpIniDirective directive = section.getDirectiveByName(name);
+                if (directive != null) {
+                    directive.setValue(value);
+                    result = true;
+                    logger.info("Directive {} updated in section {} in PHP INI file", name, section.getName());
+                    break;
+                }
+            }
+        } else {
+            logger.error("Directive name is null or empty");
+        }
+
+        return result;
     }
 
     /**
@@ -258,8 +434,8 @@ public class PhpIni implements IPhpIni {
      * @return true if the directive was removed successfully, false otherwise
      */
     @Override
-    public boolean removeDirective(IPhpIniDirective directive) {
-        return false;
+    public boolean removeDirective(@NotNull IPhpIniDirective directive) {
+        return removeDirective(directive.getName());
     }
 
     /**
@@ -270,7 +446,28 @@ public class PhpIni implements IPhpIni {
      */
     @Override
     public boolean removeDirective(String name) {
-        return false;
+        boolean result = false;
+
+        if (containsDirective(name)) {
+            for (IPhpIniSection section : ini) {
+                for (IPhpIniDirective directive : section.getDirectives()) {
+                    if (directive.getName().equalsIgnoreCase(name)) {
+                        section.getDirectives().remove(directive);
+                        result = true;
+                        logger.info("Directive {} removed from section {} in PHP INI file", name, section.getName());
+                        break;
+                    }
+                }
+
+                if (result) {
+                    break;
+                }
+            }
+        } else {
+            logger.warn(DIRECTIVE_NOT_FOUND_IN_PHP_INI_FILE, name);
+        }
+
+        return result;
     }
 
     /**
@@ -281,7 +478,30 @@ public class PhpIni implements IPhpIni {
      */
     @Override
     public IPhpIniDirective getDirective(String name) {
-        return null;
+        IPhpIniDirective directive = null;
+        boolean found = false;
+        String sectionName = null;
+
+        if (name != null && !name.isEmpty()) {
+            for (IPhpIniSection section : ini) {
+                directive = section.getDirectiveByName(name);
+                if (directive != null) {
+                    found = true;
+                    sectionName = section.getName();
+                    break;
+                }
+            }
+        } else {
+            logger.error("Directive name is null or empty");
+        }
+
+        if (!found) {
+            logger.warn(DIRECTIVE_NOT_FOUND_IN_PHP_INI_FILE, name);
+        } else {
+            logger.info("Directive {} found in section {} in PHP INI file", name, sectionName);
+        }
+
+        return directive;
     }
 
     /**
@@ -295,9 +515,14 @@ public class PhpIni implements IPhpIni {
 
         StringBuilder sb = new StringBuilder();
 
-        for (IPhpIniDirective directive : directives) {
-            sb.append(directive.toString());
-            sb.append(System.lineSeparator());
+        for (IPhpIniSection section : ini) {
+            sb.append("[").append(section.getName()).append("]").append(System.lineSeparator());
+
+            List<IPhpIniDirective> directives = section.getDirectives();
+            for (IPhpIniDirective directive : directives) {
+                sb.append(directive.getContent());
+                sb.append(System.lineSeparator());
+            }
         }
 
         fileContent = sb.toString();
@@ -306,12 +531,14 @@ public class PhpIni implements IPhpIni {
             if (innerPath != null && innerPath.toFile().canWrite()) {
                 Files.writeString(innerPath, fileContent);
                 result = true;
+                logger.info("File saved successfully: {}", filePath);
             } else {
                 logger.error("File is not writable: {}", filePath);
             }
         } catch (IOException e) {
             logger.error("Error saving file: {}", filePath, e);
         }
+
         return result;
     }
 }

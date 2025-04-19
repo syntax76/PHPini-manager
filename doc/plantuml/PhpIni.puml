@@ -1,0 +1,50 @@
+@startuml
+!include IPhpIni.puml
+
+class de.hermannbsd.phpini.library.PhpIni implements de.hermannbsd.phpini.library.interfaces.IPhpIni {
+# {static} FileAttribute<?>[] FILE_ATTRIBUTES
+- {static} Logger logger
+~ {static} String DIRECTIVE_NOT_FOUND_IN_PHP_INI_FILE
+~ {static} String DIRECTIVE_FOUND_IN_PHP_INI_FILE
+~ {static} String SECTION_NOT_FOUND_IN_PHP_INI_FILE
+~ {static} String SECTION_FOUND_IN_PHP_INI_FILE
+~ {static} String SECTION_REMOVED_FROM_PHP_INI_FILE
+~ {static} String SECTION_IS_NULL_OR_EMPTY
+- Path innerPath
+- String filePath
+- String fileName
+- String fileNameWithoutExtension
+- String fileExtension
+- String fileContent
+- boolean isCreated
+- String currentSectionName
+- List<IPhpIniSection> ini
++ <<Create>> PhpIni(String)
+- boolean tryGetFilePath(String)
+- void init()
+- void initVariables()
+- void initDirectives()
++ String getFilePath()
++ void setFilePath(String)
++ String getFileName()
++ void setFileName(String)
++ String getFileNameWithoutExtension()
++ void setFileNameWithoutExtension(String)
++ String getFileExtension()
++ String getFileContent()
++ List<IPhpIniSection> getIni()
++ boolean containsSection(String)
++ boolean containsDirective(String)
++ boolean addSection(IPhpIniSection)
++ boolean removeSection(IPhpIniSection)
++ boolean removeSection(String)
++ boolean addDirective(IPhpIniDirective)
++ boolean updateDirective(String,String)
++ boolean removeDirective(IPhpIniDirective)
++ boolean removeDirective(String)
++ IPhpIniDirective getDirective(String)
++ boolean save()
+}
+
+
+@enduml
