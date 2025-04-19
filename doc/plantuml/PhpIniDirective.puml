@@ -1,0 +1,63 @@
+@startuml
+!include IPhpIniDirective.puml
+
+class de.hermannbsd.phpini.library.PhpIniDirective implements de.hermannbsd.phpini.library.interfaces.IPhpIniDirective {
+- {static} Logger logger
+- {static} String DIRECTIVES_CSV
+- {static} List<IPhpIniDirective> directives
++ {static} String PHP_FLOAT
++ {static} String PHP_STRING
+- String name
+- String value
+- Object realValue
+- Type type
+- String section
+- String description
+- String changelog
+- String defaultValue
+- DirectiveChangeable directiveChangeable
+- IPhpIniDirective defaultDirective
++ <<Create>> PhpIniDirective(String,String)
++ <<Create>> PhpIniDirective(IPhpIniDirective)
+- <<Create>> PhpIniDirective(String,String,String,String,String,DirectiveChangeable)
+- void defaultInit(String,String)
+# void setName(String)
+# void setRealValue(Object)
+# void setType(Type)
+# void setSection(String)
+# void setDescription(String)
+~ void setChangelog(String)
+# void setDirectiveChangeable(DirectiveChangeable)
++ IPhpIniDirective getDefaultDirective()
+# void setDefaultDirective(IPhpIniDirective)
+- String handleSection(String)
+# {static} IPhpIniDirective getDirectiveByName(String)
+# {static} Type getTypeByName(String)
+# {static} String getTypeName(Type)
+- boolean tryLoadDirectives()
+- {static} void loadDirectivesLine(List<String>,int,String)
++ String getName()
++ void setValue(String)
+# boolean trySetPhpStyleValue(String)
+- boolean setPhpStyleValueByTypeInt(String)
+- boolean setPhpStyleValueByTypeFloat(String)
+- boolean setPhpStyleValueByValueTypeDefault(String)
++ String getValue()
++ boolean trySetRealValue(Object)
++ Object getRealValue()
++ void setType(String)
++ String getType()
++ String getDefaultValue()
++ DirectiveChangeable getDirectiveChangeable()
++ String getDescription()
++ String getChangelog()
++ String getSection()
+- {static} String getNotEmptyString(String)
++ {static} IPhpIniDirective getDirectiveByNameAndSetValue(String,String)
+- {static} void getDirectiveNotFoundInCsvWarn(String)
++ String toString()
+}
+
+PhpIniDirective::getDirectiveByNameAndSetValue -> IPhpIniDirective
+PhpIniDirective::getDirectiveByName -> IPhpIniDirective
+@enduml

@@ -1,0 +1,10 @@
+@startuml
+enum de.hermannbsd.phpini.library.enums.DirectiveChangeable {
++  INI_ALL
++  INI_PERDIR
++  INI_SYSTEM
++  INI_USER
++  PHP_INI_ONLY
+}
+
+@enduml

@@ -1,0 +1,21 @@
+@startuml
+!include IPhpIniSection.puml
+
+class de.hermannbsd.phpini.library.PhpIniSection implements de.hermannbsd.phpini.library.interfaces.IPhpIniSection {
+- {static} Logger logger
+- String sectionName
+- List<IPhpIniDirective> directives
++ <<Create>> PhpIniSection(String)
++ <<Create>> PhpIniSection(String,List<IPhpIniDirective>)
++ String getName()
++ List<IPhpIniDirective> getDirectives()
++ IPhpIniDirective getDirectiveByName(String)
++ boolean tryAddDirective(IPhpIniDirective)
++ boolean tryUpdateDirective(IPhpIniDirective)
++ boolean tryRemoveDirective(IPhpIniDirective)
++ boolean tryRemoveDirective(String)
++ boolean containsDirectiveByName(String)
++ String toString()
+}
+
+@enduml

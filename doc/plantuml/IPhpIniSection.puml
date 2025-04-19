@@ -1,0 +1,16 @@
+@startuml
+!include IPhpIniDirective.puml
+interface de.hermannbsd.phpini.library.interfaces.IPhpIniSection {
+~ String getName()
+~ List<IPhpIniDirective> getDirectives()
+~ IPhpIniDirective getDirectiveByName(String)
+~ boolean tryAddDirective(IPhpIniDirective)
+~ boolean tryUpdateDirective(IPhpIniDirective)
+~ boolean tryRemoveDirective(IPhpIniDirective)
+~ boolean tryRemoveDirective(String)
+~ boolean containsDirectiveByName(String)
+}
+
+IPhpIniSection::getDirectiveByName -> IPhpIniDirective
+IPhpIniSection::getDirectives -o IPhpIniDirective
+@enduml

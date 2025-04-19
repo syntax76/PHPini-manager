@@ -1,0 +1,20 @@
+@startuml
+!include DirectiveChangeable.puml
+
+interface de.hermannbsd.phpini.library.interfaces.IPhpIniDirective {
+~ String getName()
+~ void setValue(String)
+~ String getValue()
+~ boolean trySetRealValue(Object)
+~ Object getRealValue()
+~ void setType(String)
+~ String getType()
+~ String getDefaultValue()
+~ DirectiveChangeable getDirectiveChangeable()
+~ String getDescription()
+~ String getChangelog()
+~ String getSection()
+}
+
+IPhpIniDirective::getDirectiveChangeable -> DirectiveChangeable
+@enduml
